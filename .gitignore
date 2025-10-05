@@ -1,0 +1,59 @@
+# Dependency Management
+# Ignore the node_modules folder where all packages are installed
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+logs/
+*.log
+
+# Build/Dist Artifacts
+# This is where your compiled JavaScript code goes (from TypeScript)
+# Change 'dist/' or 'build/' if your tsconfig.json 'outDir' is different
+/dist/
+/build/
+/out/
+
+# TypeScript/JavaScript specific ignores
+*.js.map           # Source maps (usually generated alongside compiled JS)
+*.tsbuildinfo      # TypeScript's incremental build information
+*.d.ts             # Generated declaration files (if not intended for publishing)
+
+# Cache and Temporary files
+.npm
+.eslintcache
+.stylelintcache
+coverage/
+.temp/
+
+# Environment variables
+# KEEP ALL SENSITIVE KEYS OUT OF GIT!
+.env
+.env.*
+.flaskenv
+.vault
+*.pem
+*.key
+
+# IDE and Editor Files
+# VSCode
+.vscode/
+# Include settings.json for project-wide settings, but ignore user-specific ones
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# JetBrains IDEs (WebStorm, IntelliJ)
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Operating System Files
+.DS_Store
+Thumbs.db

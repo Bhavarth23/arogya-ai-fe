@@ -1,0 +1,18 @@
+/* src/index.css */
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #F8F9FA; /* The new 'Clinical Light' background */
+}
+
+/* We can keep the custom scrollbar, but with light theme colors */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #E9ECEF;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #4361EE;
+  border-radius: 10px;
+}

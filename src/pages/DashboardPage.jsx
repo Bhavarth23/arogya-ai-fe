@@ -19,6 +19,13 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Tooltip,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  Dialog, // Added for pop-ups
+  DialogTitle, // Added for pop-ups
+  DialogContent, // Added for pop-ups
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,7 +37,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   Legend,
   ResponsiveContainer,
 } from "recharts";
@@ -56,9 +63,16 @@ import HistoryIcon from "@mui/icons-material/History";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import InsightsIcon from "@mui/icons-material/Insights";
+import PrintIcon from "@mui/icons-material/Print";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import TrendingFlatIcon from "@mui/icons-material/TrendingFlat";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import TuneIcon from "@mui/icons-material/Tune"; // Icon for new features button
+import CloseIcon from "@mui/icons-material/Close"; // Icon for dialog close button
+import ArticleIcon from "@mui/icons-material/Article"; // Icon for report menu item
 
-// --- Helper Components ---
-
+// --- Helper Components (Unchanged) ---
 const HighlightKeywords = ({ text, keywords }) => {
   const theme = useTheme();
   if (!keywords || !text) {
@@ -95,7 +109,6 @@ const HighlightKeywords = ({ text, keywords }) => {
     </Typography>
   );
 };
-
 const AnalysisList = ({ items, keywords }) => {
   const theme = useTheme();
   if (!items || !Array.isArray(items) || items.length === 0) {
@@ -121,7 +134,6 @@ const AnalysisList = ({ items, keywords }) => {
     </List>
   );
 };
-
 const faqData = [
   {
     question: "What is Arogya AI?",
@@ -144,7 +156,6 @@ const faqData = [
       "No, absolutely not. Arogya AI is an informational tool only. The analysis it provides is not a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified doctor for any health concerns.",
   },
 ];
-
 const FaqWidget = ({ sx }) => {
   const [expanded, setExpanded] = useState(false);
   const theme = useTheme();
@@ -197,7 +208,6 @@ const FaqWidget = ({ sx }) => {
     </Paper>
   );
 };
-
 const HealthTrendWidget = ({ sx }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -236,12 +246,6 @@ const HealthTrendWidget = ({ sx }) => {
       elevation={0}
       sx={{ ...sx, p: 4, display: "flex", flexDirection: "column" }}
     >
-      <Typography
-        variant="h6"
-        sx={{ fontWeight: "bold", color: theme.palette.text.primary, mb: 3 }}
-      >
-        Health Status Trend
-      </Typography>
       {loading ? (
         <Box
           sx={{
@@ -279,7 +283,7 @@ const HealthTrendWidget = ({ sx }) => {
                   ["Normal", "Action", "Urgent"][value - 1]
                 }
               />
-              <Tooltip
+              <RechartsTooltip
                 contentStyle={{
                   backgroundColor: "rgba(30, 41, 59, 0.9)",
                   borderColor: theme.palette.divider,
@@ -324,8 +328,6 @@ const HealthTrendWidget = ({ sx }) => {
     </Paper>
   );
 };
-
-// ActionCard component
 const ActionCard = ({ title, description, icon, onClick }) => {
   const theme = useTheme();
 
@@ -376,14 +378,156 @@ const ActionCard = ({ title, description, icon, onClick }) => {
     </Paper>
   );
 };
+const calculateMockWellnessScore = (report) => {
+  if (!report) {
+    return {
+      score: "N/A",
+      status: "No Data",
+      trend: "Stable",
+      TrendIcon: TrendingFlatIcon,
+      trendColor: "text.secondary",
+    };
+  }
 
+  const statusMap = { Normal: 85, "Action Needed": 60, Urgent: 35 };
+  const scoreValue = statusMap[report.status] || 50;
+
+  let trend = "Stable";
+  let TrendIcon = TrendingFlatIcon;
+  let trendColor = "text.secondary";
+
+  if (scoreValue > 75) {
+    trend = "Improving";
+    TrendIcon = TrendingUpIcon;
+    trendColor = "success.main";
+  } else if (scoreValue < 50) {
+    trend = "Declining";
+    TrendIcon = TrendingDownIcon;
+    trendColor = "error.main";
+  }
+
+  return {
+    score: `${scoreValue}%`,
+    status: report.status || "Average",
+    trend,
+    TrendIcon,
+    trendColor,
+  };
+};
+const KeyMetricSnapshotWidget = ({ latestReport }) => {
+  // The isScoreVisible state has been removed.
+  const { score, status, trend, TrendIcon, trendColor } =
+    calculateMockWellnessScore(latestReport);
+
+  const scoreCalculationInfo = (
+    <>
+      <Typography color="inherit" sx={{ fontWeight: "bold", mb: 1 }}>
+        Score Calculation
+      </Typography>
+      <Typography variant="body2" color="inherit" component="div">
+        The score is a simplified wellness indicator based on the latest
+        report's AI-assessed status:
+        <ul style={{ paddingLeft: "20px", margin: "8px 0 0 0" }}>
+          <li>
+            <b>Normal:</b> 85%
+          </li>
+          <li>
+            <b>Action Needed:</b> 60%
+          </li>
+          <li>
+            <b>Urgent:</b> 35%
+          </li>
+          <li>
+            <b>No Data:</b> N/A
+          </li>
+        </ul>
+      </Typography>
+    </>
+  );
+
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        p: 4,
+        borderRadius: 4,
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        justifyContent: "space-between",
+        border: (theme) => `2px solid ${theme.palette.secondary.main}`,
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Typography
+          variant="h6"
+          sx={{ fontWeight: 700, color: "text.primary" }}
+        >
+          Overall Wellness Score
+        </Typography>
+        <Tooltip title={scoreCalculationInfo} arrow>
+          <IconButton size="small" sx={{ ml: 0.5 }}>
+            <HelpOutlineIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          mt: 2,
+        }}
+      >
+        {/* --- MODIFIED PART --- */}
+        <Typography
+          variant="h3"
+          sx={{
+            fontWeight: 900,
+            color: "secondary.main",
+            lineHeight: 1,
+          }}
+        >
+          {score}
+        </Typography>
+        {/* --- END MODIFIED PART --- */}
+
+        <Box sx={{ textAlign: "right" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              color: trendColor,
+            }}
+          >
+            <TrendIcon sx={{ fontSize: 20, mr: 0.5 }} />
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {trend}
+            </Typography>
+          </Box>
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+            Based on latest report status.
+          </Typography>
+        </Box>
+      </Box>
+    </Paper>
+  );
+};
+
+// --- Main Dashboard Page Component ---
 function DashboardPage() {
   const theme = useTheme();
   const [view, setView] = useState("dashboard");
   const navigate = useNavigate();
 
-  const [showLatestReport, setShowLatestReport] = useState(false);
-  const [showHealthTrend, setShowHealthTrend] = useState(false);
+  // State for controlling which pop-up dialog is open
+  const [openDialog, setOpenDialog] = useState(null);
+
+  // State for the features menu itself
+  const [anchorEl, setAnchorEl] = useState(null);
+  const isMenuOpen = Boolean(anchorEl);
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [analysis, setAnalysis] = useState(null);
@@ -480,7 +624,7 @@ function DashboardPage() {
     const newHistory = [...chatHistory, newUserMessage];
     setChatHistory(newHistory);
     setUserInput("");
-    setIsLoading(true); // Should be setIsChatLoading(true)
+    setIsChatLoading(true);
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/chat/", {
         report_text: extractedText,
@@ -499,7 +643,7 @@ function DashboardPage() {
       };
       setChatHistory((prev) => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false); // Should be setIsChatLoading(false)
+      setIsChatLoading(false);
     }
   };
 
@@ -510,6 +654,25 @@ function DashboardPage() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory]);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // Handlers for the features menu
+  const handleMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+  const handleDialogOpen = (dialogName) => {
+    setOpenDialog(dialogName);
+    handleMenuClose();
+  };
+  const handleDialogClose = () => {
+    setOpenDialog(null);
+  };
 
   const analysisSections = [
     {
@@ -573,7 +736,7 @@ function DashboardPage() {
       sx={{
         p: { xs: 4, sm: 6, lg: 10 },
         minHeight: "calc(100vh - 72px)",
-        color: theme.palette.text.primary,
+        color: "text.primary",
       }}
     >
       <AnimatePresence mode="wait">
@@ -585,34 +748,89 @@ function DashboardPage() {
             animate="visible"
             exit="exit"
           >
-            {/* --- WELCOME HEADER --- */}
-            <Typography
-              variant="h3"
-              component="h1"
-              gutterBottom
-              sx={{ fontWeight: 800, color: theme.palette.text.primary, mb: 2 }}
+            {/* --- HEADER WITH FEATURES POPOVER --- */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
             >
-              Welcome to Arogya{" "}
-              <Box
-                component="span"
-                sx={{
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  lineHeight: 1,
-                }}
+              <Typography
+                variant="h3"
+                component="h1"
+                gutterBottom
+                sx={{ fontWeight: 800, color: "text.primary", mb: 0 }}
               >
-                AI
-              </Box>
-            </Typography>
+                Welcome to Arogya{" "}
+                <Box
+                  component="span"
+                  sx={{
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    lineHeight: 1,
+                  }}
+                >
+                  AI
+                </Box>
+              </Typography>
+              <Tooltip title="Dashboard Features">
+                <IconButton
+                  id="features-button"
+                  aria-controls={isMenuOpen ? "features-menu" : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={isMenuOpen ? "true" : undefined}
+                  onClick={handleMenuClick}
+                  sx={{
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
+                    "&:hover": { bgcolor: "primary.dark" },
+                  }}
+                >
+                  <TuneIcon />
+                </IconButton>
+              </Tooltip>
+              <Menu
+                id="features-menu"
+                anchorEl={anchorEl}
+                open={isMenuOpen}
+                onClose={handleMenuClose}
+                MenuListProps={{ "aria-labelledby": "features-button" }}
+                transformOrigin={{ horizontal: "right", vertical: "top" }}
+                anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+              >
+                <MenuItem onClick={() => handleDialogOpen("wellness")}>
+                  <ListItemIcon>
+                    <HealthAndSafetyIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Wellness Score Checker</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => handleDialogOpen("report")}>
+                  <ListItemIcon>
+                    <ArticleIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Latest Report</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => handleDialogOpen("trend")}>
+                  <ListItemIcon>
+                    <TrendingUpIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Health Trend</ListItemText>
+                </MenuItem>
+              </Menu>
+            </Box>
+
             <Typography
-              color={theme.palette.text.secondary}
-              sx={{ mb: 8, fontSize: "1.1rem" }}
+              color="text.secondary"
+              sx={{ mb: 4, fontSize: "1.1rem" }}
             >
               Your personal AI-powered health assistant.
             </Typography>
+
             {/* --- KEY ACTIONS GRID --- */}
-            <Grid container spacing={4} sx={{ mb: 8 }}>
+            <Grid container spacing={4} sx={{ mb: 4 }}>
               <Grid item xs={12} sm={6} lg={4}>
                 <ActionCard
                   title="Analyze Report"
@@ -638,121 +856,80 @@ function DashboardPage() {
                 />
               </Grid>
             </Grid>
-            {/* --- INTERACTIVE WIDGET TOGGLES --- */}
-            <Box sx={{ mb: 8, display: "flex", gap: 4 }}>
-              <Button
-                variant={showLatestReport ? "contained" : "outlined"}
-                color={showLatestReport ? "secondary" : "inherit"}
-                onClick={() => setShowLatestReport(!showLatestReport)}
-                startIcon={
-                  showLatestReport ? <VisibilityOffIcon /> : <VisibilityIcon />
-                }
-                sx={{
-                  borderRadius: 3,
-                  fontWeight: 700,
-                  py: 1.5,
-                  transition: "all 0.3s",
-                  borderColor: showLatestReport
-                    ? theme.palette.secondary.main
-                    : theme.palette.divider,
-                  color: showLatestReport
-                    ? theme.palette.secondary.contrastText
-                    : theme.palette.text.primary,
-                  "&:hover": {
-                    bgcolor: showLatestReport
-                      ? theme.palette.secondary.dark
-                      : "rgba(255,255,255,0.05)",
-                    borderColor: theme.palette.secondary.main,
-                  },
-                }}
-              >
-                {showLatestReport ? "Hide Latest Report" : "Show Latest Report"}
-              </Button>
-              <Button
-                variant={showHealthTrend ? "contained" : "outlined"}
-                color={showHealthTrend ? "primary" : "inherit"}
-                onClick={() => setShowHealthTrend(!showHealthTrend)}
-                startIcon={
-                  showHealthTrend ? <VisibilityOffIcon /> : <InsightsIcon />
-                }
-                sx={{
-                  borderRadius: 3,
-                  fontWeight: 700,
-                  py: 1.5,
-                  transition: "all 0.3s",
-                  borderColor: showHealthTrend
-                    ? theme.palette.primary.main
-                    : theme.palette.divider,
-                  color: showHealthTrend
-                    ? theme.palette.primary.contrastText
-                    : theme.palette.text.primary,
-                  "&:hover": {
-                    bgcolor: showHealthTrend
-                      ? theme.palette.primary.dark
-                      : "rgba(255,255,255,0.05)",
-                    borderColor: theme.palette.primary.main,
-                  },
-                }}
-              >
-                {showHealthTrend ? "Hide Health Trend" : "Show Health Trend"}
-              </Button>
-            </Box>
-            {/* --- WIDGETS AND FAQ --- */}
-            <Grid container spacing={4}>
-              <Grid item xs={12} md={7}>
-                <AnimatePresence>
-                  {showLatestReport && (
-                    <motion.div
-                      variants={pageVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                    >
-                      {isWidgetLoading ? (
-                        <Paper
-                          elevation={0}
-                          sx={{
-                            p: 4,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            minHeight: "200px",
-                            mb: 4,
-                          }}
-                        >
-                          <CircularProgress
-                            sx={{ color: theme.palette.secondary.main }}
-                          />
-                        </Paper>
-                      ) : (
-                        <LatestReportWidget
-                          report={latestReport}
-                          sx={{ mb: 4 }}
-                        />
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                <AnimatePresence>
-                  {showHealthTrend && (
-                    <motion.div
-                      variants={pageVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                    >
-                      <HealthTrendWidget />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </Grid>
-              <Grid item xs={12} md={5} sx={{ display: "flex" }}>
-                <FaqWidget sx={{ flexGrow: 1 }} />
-              </Grid>
-            </Grid>
+
+            {/* --- FAQ WIDGET (Now takes full width) --- */}
+            <FaqWidget />
+
+            {/* --- DIALOGS FOR FEATURES --- */}
+            <Dialog
+              open={openDialog === "wellness"}
+              onClose={handleDialogClose}
+              fullWidth
+              maxWidth="sm"
+            >
+              <DialogTitle>
+                Wellness Score{" "}
+                <IconButton
+                  aria-label="close"
+                  onClick={handleDialogClose}
+                  sx={{ position: "absolute", right: 8, top: 8 }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </DialogTitle>
+              <DialogContent>
+                <KeyMetricSnapshotWidget latestReport={latestReport} />
+              </DialogContent>
+            </Dialog>
+
+            <Dialog
+              open={openDialog === "report"}
+              onClose={handleDialogClose}
+              fullWidth
+              maxWidth="md"
+            >
+              <DialogTitle>
+                Latest Report{" "}
+                <IconButton
+                  aria-label="close"
+                  onClick={handleDialogClose}
+                  sx={{ position: "absolute", right: 8, top: 8 }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </DialogTitle>
+              <DialogContent sx={{ pt: "20px !important" }}>
+                {isWidgetLoading ? (
+                  <CircularProgress />
+                ) : (
+                  <LatestReportWidget report={latestReport} />
+                )}
+              </DialogContent>
+            </Dialog>
+
+            <Dialog
+              open={openDialog === "trend"}
+              onClose={handleDialogClose}
+              fullWidth
+              maxWidth="lg"
+            >
+              <DialogTitle>
+                Health Trend{" "}
+                <IconButton
+                  aria-label="close"
+                  onClick={handleDialogClose}
+                  sx={{ position: "absolute", right: 8, top: 8 }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </DialogTitle>
+              <DialogContent>
+                <HealthTrendWidget />
+              </DialogContent>
+            </Dialog>
           </motion.div>
         ) : (
-          /* --- THE REPORT ANALYZER VIEW --- */
+          /* --- THE REPORT ANALYZER VIEW (Unchanged) --- */
           <motion.div
             key="analyzer"
             variants={pageVariants}
@@ -767,12 +944,12 @@ function DashboardPage() {
               variant="outlined"
               sx={{
                 mb: 6,
-                borderColor: theme.palette.secondary.main,
-                color: theme.palette.secondary.main,
+                borderColor: "secondary.main",
+                color: "secondary.main",
                 transition: "all 0.3s",
                 "&:hover": {
                   bgcolor: "rgba(56, 189, 248, 0.1)",
-                  borderColor: theme.palette.secondary.main,
+                  borderColor: "secondary.main",
                 },
               }}
             >
@@ -784,11 +961,7 @@ function DashboardPage() {
                   <Typography
                     variant="h5"
                     gutterBottom
-                    sx={{
-                      fontWeight: 700,
-                      color: theme.palette.text.primary,
-                      mb: 3,
-                    }}
+                    sx={{ fontWeight: 700, color: "text.primary", mb: 3 }}
                   >
                     Upload Your Medical Report
                   </Typography>
@@ -797,11 +970,12 @@ function DashboardPage() {
                     sx={{
                       p: 6,
                       mt: 2,
-                      border: `2px dashed ${
-                        isDragActive
-                          ? theme.palette.secondary.main
-                          : theme.palette.divider
-                      }`,
+                      border: (theme) =>
+                        `2px dashed ${
+                          isDragActive
+                            ? theme.palette.secondary.main
+                            : theme.palette.divider
+                        }`,
                       borderRadius: 3,
                       textAlign: "center",
                       cursor: "pointer",
@@ -813,20 +987,13 @@ function DashboardPage() {
                   >
                     <input {...getInputProps()} />
                     <UploadFileIcon
-                      sx={{
-                        fontSize: 56,
-                        color: theme.palette.secondary.main,
-                        mb: 2,
-                      }}
+                      sx={{ fontSize: 56, color: "secondary.main", mb: 2 }}
                     />
-                    <Typography color={theme.palette.text.secondary}>
+                    <Typography color="text.secondary">
                       Drag & drop, or{" "}
                       <Box
                         component="span"
-                        sx={{
-                          color: theme.palette.secondary.light,
-                          fontWeight: "bold",
-                        }}
+                        sx={{ color: "secondary.light", fontWeight: "bold" }}
                       >
                         click to browse
                       </Box>
@@ -837,7 +1004,7 @@ function DashboardPage() {
                       sx={{
                         mt: 2,
                         fontStyle: "italic",
-                        color: theme.palette.text.secondary,
+                        color: "text.secondary",
                       }}
                     >
                       Selected: {selectedFile.name}
@@ -868,223 +1035,283 @@ function DashboardPage() {
                   </Alert>
                 )}
                 {analysis && (
-                  <Paper
-                    elevation={0}
-                    sx={{ color: theme.palette.text.primary }}
-                  >
-                    <Box
-                      sx={{
-                        p: 3,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        borderBottom: 1,
-                        borderColor: theme.palette.divider,
-                      }}
-                    >
-                      <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                        AI Analysis Results
-                      </Typography>
-                      <StatusChip status={analysis.status} />
-                    </Box>
-                    {analysisSections.map((section, index) => (
-                      <Accordion
-                        key={section.panel}
-                        expanded={expandedAccordion === section.panel}
-                        onChange={handleAccordionChange(section.panel)}
-                        disableGutters
+                  <>
+                    <div id="printable-analysis">
+                      <Paper
                         elevation={0}
-                        sx={{
-                          background: "transparent",
-                          color: theme.palette.text.primary,
-                          "&:before": { display: "none" },
-                          borderBottom:
-                            index < analysisSections.length - 1
-                              ? `1px solid ${theme.palette.divider}`
-                              : "none",
-                        }}
+                        sx={{ color: "text.primary", mb: 4 }}
                       >
-                        <AccordionSummary
-                          expandIcon={
-                            <ExpandMoreIcon
-                              sx={{ color: theme.palette.primary.main }}
-                            />
-                          }
+                        <Box
+                          sx={{
+                            p: 3,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            borderBottom: 1,
+                            borderColor: "divider",
+                            flexWrap: "wrap",
+                          }}
                         >
-                          <section.Icon
-                            sx={{ mr: 2, color: theme.palette.secondary.main }}
-                          />
-                          <Typography sx={{ fontWeight: 500 }}>
-                            {section.title}
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 700, mb: { xs: 2, sm: 0 } }}
+                          >
+                            {" "}
+                            AI Analysis Results{" "}
                           </Typography>
-                        </AccordionSummary>
-                        <AccordionDetails
-                          sx={{ bgcolor: theme.palette.background.paper }}
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: 2,
+                              alignItems: "center",
+                            }}
+                            className="no-print"
+                          >
+                            <StatusChip status={analysis.status} />
+                            <Button
+                              onClick={handlePrint}
+                              variant="contained"
+                              color="secondary"
+                              size="small"
+                              startIcon={<PrintIcon />}
+                              sx={{ fontWeight: 700, borderRadius: 2 }}
+                            >
+                              {" "}
+                              Print / Export{" "}
+                            </Button>
+                          </Box>
+                        </Box>
+                        <Box
+                          className="print-only"
+                          sx={{ p: 3, textAlign: "center" }}
                         >
-                          {section.content}
-                        </AccordionDetails>
-                      </Accordion>
-                    ))}
-                    <Box
-                      sx={{
-                        p: 3,
-                        bgcolor: theme.palette.background.paper,
-                        borderTop: 1,
-                        borderColor: theme.palette.divider,
-                      }}
+                          <Typography
+                            variant="h5"
+                            sx={{
+                              fontWeight: 700,
+                              color: "text.primary",
+                              mb: 1,
+                            }}
+                          >
+                            Arogya AI Medical Analysis
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "text.secondary" }}
+                          >
+                            Report Date: {new Date().toLocaleDateString()}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "text.secondary", mt: 0.5 }}
+                          >
+                            Generated for Physician Review (Non-Diagnostic)
+                          </Typography>
+                        </Box>
+                        {analysisSections.map((section, index) => (
+                          <Accordion
+                            key={section.panel}
+                            expanded={expandedAccordion === section.panel}
+                            onChange={handleAccordionChange(section.panel)}
+                            disableGutters
+                            elevation={0}
+                            sx={{
+                              background: "transparent",
+                              color: "text.primary",
+                              "&:before": { display: "none" },
+                              borderBottom:
+                                index < analysisSections.length - 1
+                                  ? `1px solid ${theme.palette.divider}`
+                                  : "none",
+                            }}
+                          >
+                            <AccordionSummary
+                              expandIcon={<ExpandMoreIcon color="primary" />}
+                            >
+                              <section.Icon
+                                sx={{ mr: 2, color: "secondary.main" }}
+                              />
+                              <Typography sx={{ fontWeight: 500 }}>
+                                {section.title}
+                              </Typography>
+                            </AccordionSummary>
+                            <AccordionDetails
+                              sx={{ bgcolor: "background.paper" }}
+                            >
+                              {section.content}
+                            </AccordionDetails>
+                          </Accordion>
+                        ))}
+                      </Paper>
+                    </div>
+                    <Paper
+                      className="no-print"
+                      sx={{ color: "text.primary", mt: 4 }}
                     >
-                      <Typography
-                        variant="h6"
-                        gutterBottom
-                        sx={{ fontWeight: 700 }}
-                      >
-                        Follow-up Chat
-                      </Typography>
                       <Box
                         sx={{
-                          minHeight: "150px",
-                          maxHeight: "300px",
-                          overflowY: "auto",
-                          mb: 2,
-                          p: 2,
-                          borderRadius: 2,
-                          bgcolor: theme.palette.background.default,
+                          p: 3,
+                          bgcolor: "background.paper",
+                          borderTop: 1,
+                          borderColor: "divider",
+                          borderRadius: 4,
                         }}
                       >
-                        {chatHistory.length === 0 && (
-                          <Box
-                            sx={{
-                              display: "flex",
-                              height: "100%",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <Typography color={theme.palette.text.secondary}>
-                              Ask a follow-up question.
-                            </Typography>
-                          </Box>
-                        )}
-                        {chatHistory.map((message, index) => (
-                          <Box
-                            key={index}
-                            sx={{
-                              display: "flex",
-                              justifyContent:
-                                message.role === "user"
-                                  ? "flex-end"
-                                  : "flex-start",
-                              mb: 2,
-                            }}
-                          >
-                            {message.role === "model" && (
-                              <Avatar
-                                sx={{
-                                  bgcolor: theme.palette.secondary.main,
-                                  width: 32,
-                                  height: 32,
-                                  mr: 1.5,
-                                }}
-                              >
-                                <SmartToyIcon fontSize="small" />
-                              </Avatar>
-                            )}
-                            <Paper
-                              elevation={0}
+                        <Typography
+                          variant="h6"
+                          gutterBottom
+                          sx={{ fontWeight: 700 }}
+                        >
+                          {" "}
+                          Follow-up Chat{" "}
+                        </Typography>
+                        <Box
+                          sx={{
+                            minHeight: "150px",
+                            maxHeight: "300px",
+                            overflowY: "auto",
+                            mb: 2,
+                            p: 2,
+                            borderRadius: 2,
+                            bgcolor: "background.default",
+                          }}
+                        >
+                          {chatHistory.length === 0 && (
+                            <Box
                               sx={{
-                                p: 1.5,
-                                bgcolor:
-                                  message.role === "user"
-                                    ? theme.palette.primary.main
-                                    : theme.palette.background.default,
-                                color:
-                                  message.role === "user"
-                                    ? theme.palette.primary.contrastText
-                                    : theme.palette.text.primary,
-                                borderRadius:
-                                  message.role === "user"
-                                    ? "20px 20px 4px 20px"
-                                    : "20px 20px 20px 4px",
-                                maxWidth: "80%",
-                                wordBreak: "break-word",
+                                display: "flex",
+                                height: "100%",
+                                alignItems: "center",
+                                justifyContent: "center",
                               }}
                             >
-                              <Typography variant="body2" component="div">
-                                <ReactMarkdown>
-                                  {message.parts[0].text}
-                                </ReactMarkdown>
+                              <Typography color="text.secondary">
+                                {" "}
+                                Ask a follow-up question.{" "}
                               </Typography>
-                            </Paper>
-                            {message.role === "user" && (
-                              <Avatar
+                            </Box>
+                          )}
+                          {chatHistory.map((message, index) => (
+                            <Box
+                              key={index}
+                              sx={{
+                                display: "flex",
+                                justifyContent:
+                                  message.role === "user"
+                                    ? "flex-end"
+                                    : "flex-start",
+                                mb: 2,
+                              }}
+                            >
+                              {message.role === "model" && (
+                                <Avatar
+                                  sx={{
+                                    bgcolor: "secondary.main",
+                                    width: 32,
+                                    height: 32,
+                                    mr: 1.5,
+                                  }}
+                                >
+                                  {" "}
+                                  <SmartToyIcon fontSize="small" />{" "}
+                                </Avatar>
+                              )}
+                              <Paper
+                                elevation={0}
                                 sx={{
-                                  bgcolor: theme.palette.divider,
-                                  width: 32,
-                                  height: 32,
-                                  ml: 1.5,
+                                  p: 1.5,
+                                  bgcolor:
+                                    message.role === "user"
+                                      ? "primary.main"
+                                      : "background.default",
+                                  color:
+                                    message.role === "user"
+                                      ? "primary.contrastText"
+                                      : "text.primary",
+                                  borderRadius:
+                                    message.role === "user"
+                                      ? "20px 20px 4px 20px"
+                                      : "20px 20px 20px 4px",
+                                  maxWidth: "80%",
+                                  wordBreak: "break-word",
                                 }}
                               >
-                                <PersonIcon fontSize="small" />
-                              </Avatar>
-                            )}
-                          </Box>
-                        ))}
-                        {isChatLoading && (
-                          <CircularProgress
-                            size={24}
+                                <Typography variant="body2" component="div">
+                                  <ReactMarkdown>
+                                    {message.parts[0].text}
+                                  </ReactMarkdown>
+                                </Typography>
+                              </Paper>
+                              {message.role === "user" && (
+                                <Avatar
+                                  sx={{
+                                    bgcolor: "divider",
+                                    width: 32,
+                                    height: 32,
+                                    ml: 1.5,
+                                  }}
+                                >
+                                  {" "}
+                                  <PersonIcon fontSize="small" />{" "}
+                                </Avatar>
+                              )}
+                            </Box>
+                          ))}
+                          {isChatLoading && (
+                            <CircularProgress
+                              size={24}
+                              sx={{
+                                display: "block",
+                                mx: "auto",
+                                color: "secondary.main",
+                              }}
+                            />
+                          )}
+                          <div ref={chatEndRef} />
+                        </Box>
+                        <Box
+                          component="form"
+                          onSubmit={handleSendMessage}
+                          sx={{ display: "flex", gap: 1 }}
+                        >
+                          <TextField
+                            fullWidth
+                            variant="outlined"
+                            placeholder="Ask a follow-up question..."
+                            value={userInput}
+                            onChange={(e) => setUserInput(e.target.value)}
+                            size="small"
                             sx={{
-                              display: "block",
-                              mx: "auto",
-                              color: theme.palette.secondary.main,
+                              "& .MuiOutlinedInput-root": {
+                                bgcolor: "background.default",
+                                borderRadius: "20px",
+                                "& fieldset": { borderColor: "divider" },
+                                "&:hover fieldset": {
+                                  borderColor: "text.secondary",
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "primary.main",
+                                },
+                                "& input": { color: "text.primary" },
+                              },
                             }}
                           />
-                        )}
-                        <div ref={chatEndRef} />
+                          <IconButton
+                            type="submit"
+                            color="primary"
+                            disabled={isChatLoading}
+                            sx={{
+                              flexShrink: 0,
+                              bgcolor: "primary.main",
+                              "&:hover": { bgcolor: "primary.dark" },
+                            }}
+                          >
+                            <SendIcon />
+                          </IconButton>
+                        </Box>
                       </Box>
-                      <Box
-                        component="form"
-                        onSubmit={handleSendMessage}
-                        sx={{ display: "flex", gap: 1 }}
-                      >
-                        <TextField
-                          fullWidth
-                          variant="outlined"
-                          placeholder="Ask a follow-up question..."
-                          value={userInput}
-                          onChange={(e) => setUserInput(e.target.value)}
-                          size="small"
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              bgcolor: theme.palette.background.default,
-                              borderRadius: "20px",
-                              "& fieldset": {
-                                borderColor: theme.palette.divider,
-                              },
-                              "&:hover fieldset": {
-                                borderColor: theme.palette.text.secondary,
-                              },
-                              "&.Mui-focused fieldset": {
-                                borderColor: theme.palette.primary.main,
-                              },
-                              "& input": { color: theme.palette.text.primary },
-                            },
-                          }}
-                        />
-                        <IconButton
-                          type="submit"
-                          color="primary"
-                          disabled={isChatLoading}
-                          sx={{
-                            flexShrink: 0,
-                            bgcolor: theme.palette.primary.main,
-                            "&:hover": { bgcolor: theme.palette.primary.dark },
-                          }}
-                        >
-                          <SendIcon />
-                        </IconButton>
-                      </Box>
-                    </Box>
-                  </Paper>
+                    </Paper>
+                  </>
                 )}
               </Grid>
             </Grid>

@@ -1,18 +1,93 @@
 /* src/index.css */
+
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
-  background-color: #F8F9FA; /* The new 'Clinical Light' background */
+
+  /* NOTE: The body background color below is for local dev environments only
+     where the main React layout might not cover the full viewport.
+     For Arogya AI, the theme.js sets the dark background, but we keep this. */
+  background-color: #F8F9FA;
 }
 
-/* We can keep the custom scrollbar, but with light theme colors */
+/* ==================================== */
+/* === Custom Scrollbar Styling === */
+/* ==================================== */
+
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: #E9ECEF;
 }
+
 ::-webkit-scrollbar-thumb {
   background-color: #4361EE;
   border-radius: 10px;
+}
+
+
+/* ======================================= */
+/* === PRINT MEDIA QUERIES (Export Fix) === */
+/* ======================================= */
+
+@media print {
+  /* 1. HIDE ALL GLOBAL UI ELEMENTS */
+  /* Targets Navbar, Footer, Floating Chat, and the main page padding box */
+  .MuiAppBar-root,
+  footer,
+  .MuiFab-root,
+  .MuiButton-root:not(#printable-analysis .MuiButton-root),
+  .MuiAlert-root, /* Hide error/success messages */
+  .MuiPaper-root:not(.MuiDialog-paper, #printable-analysis, #printable-analysis *) /* Hide all non-analysis cards/papers */
+  {
+    display: none !important;
+  }
+  
+  /* 2. ENSURE THE PAGE BACKGROUND IS CLEAN WHITE FOR PRINTING */
+  body, html, #root {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  /* 3. SHOW AND FORMAT THE PRINTABLE AREA (The Analysis Results) */
+  #printable-analysis {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #000 !important; /* Ensure content text prints black */
+  }
+
+  /* 4. Ensure Accordions are Expanded for Printing */
+  /* This forces the collapsible content (Description, Medicine, etc.) to show */
+  .MuiCollapse-root,
+  .MuiCollapse-entered {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
+  }
+  
+  /* Hide the accordion header when printing */
+  .MuiAccordionSummary-root {
+    display: none !important;
+  }
+  
+  /* Ensure the accordion details are visible and styled for printing */
+  .MuiAccordionDetails-root {
+    border-bottom: 1px solid #ccc !important;
+    padding: 16px 0 !important;
+  }
+  
+  /* 5. Ensure core structural elements are visible and reset */
+  .MuiBox-root,
+  .MuiTypography-root,
+  .MuiGrid-root {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
 }
